@@ -68,6 +68,30 @@ def main():
     ec2.add_inbound_rule_to_sg(public_security_group_id)
     print("Added public access rule group")
 
+    user_data = """#!/bin/bash
+                apt-get update
+                apt-get upgrade
+                apt-get install nginx -y
+                service nginx restart"""
+    ami_id = 'ami-03f0fd1a2ba530e75'
+
+    # Launch a public EC2 instance
+    ec2.launch_ec2_instance(ami_id, key_pair_name, 1, 1, public_security_group_id, public_subnet_id, user_data)
+
+    print("Launching public ec2 instance...")
+
+    # Adding another SG for private EC2 instance
+
+    private_security_group_name = "Boto3-Private-SG"
+    private_security_group_description = "Private SG for private private instance"
+    private_security_group_response = ec2.create_security_group(private_security_group_name, private_security_group_description, vpc_id)
+    private_security_group_id = private_security_group_response['GroupId']
+
+    # Add rule to private security group
+    ec2.add_inbound_rule_to_sg(private_security_group_id)
+
+    # Launch private EC2 instance
+    ec2.launch_ec2_instance(ami_id, key_pair_name, 1, 1, private_security_group_id, private_subnet_id, '')
 
 
 
